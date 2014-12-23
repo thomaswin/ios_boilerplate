@@ -7,6 +7,7 @@
 //
 
 #import "SecondViewController.h"
+#import <Parse/Parse.h>
 
 @interface SecondViewController ()
 
@@ -24,4 +25,16 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void) viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    PFQuery *query = [PFQuery queryWithClassName:@"Result"];
+    [query fromLocalDatastore];
+    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+        if (error == nil) {
+            NSLog(@"Object count : %d", [objects count]);
+        } else {
+            NSLog(@"error : %@", [error description]);
+        }
+    }];
+}
 @end

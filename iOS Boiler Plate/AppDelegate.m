@@ -8,17 +8,70 @@
 
 #import "AppDelegate.h"
 
+#import <Parse/Parse.h>
+#import <ParseCrashReporting/ParseCrashReporting.h>
+
+
 @interface AppDelegate ()
 
 @end
 
 @implementation AppDelegate
 
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+
+
+    // [ParseCrashReporting enable];
+    [Parse setApplicationId:@"l25R1Oozg0t7ClB3FWE9gw6fJhkkleFbWCN6EXKR"
+                  clientKey:@"STbWWnzzfiYzINCZe2RkXJMwFqWW836XfcTgOyq8"];
+    [Parse enableLocalDatastore];
+    
+    [PFAnalytics trackAppOpenedWithLaunchOptions:launchOptions];
+    [self localDatastoreTrial];
+    
+
     return YES;
 }
+
+
+- (void) localDatastoreTrial {
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
+                   dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+                       
+                       PFQuery *query = [PFQuery queryWithClassName:@"Result"];
+                       [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+                           
+                           [PFObject unpinAllInBackground:objects withName:@"scores" block:^(BOOL succeeded, NSError *error) {
+                               
+                               [PFObject pinAllInBackground:objects withName:@"scores" block:^(BOOL succeeded, NSError *error) {
+                                   
+                                   if (error == nil) {
+                                       
+                                       NSLog(@"Pin count : %d", [objects count]);
+                                       
+                                   } else {
+                                       NSLog(@"Pin in background complete ERROR ");
+                                   }
+
+                               }];
+                               
+                           }];
+                       }];
+                   });
+}
+
+- (void) crashTest {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [NSException raise:NSGenericException format:@"Everything is ok. This is just a test crash."];
+    });
+}
+
+- (void)crash {
+    [NSException raise:NSGenericException format:@"Everything is ok. This is just a test crash."];
+}
+
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
